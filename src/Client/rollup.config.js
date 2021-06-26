@@ -1,5 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
-import { terser } from "rollup-plugin-terser";
+// import { terser } from "rollup-plugin-terser";
 
 export default {
   input: 'src/app.js',
@@ -8,5 +8,5 @@ export default {
     file: '../Server/wwwroot/app.js',
     format: 'es'
   },
-  plugins: [ resolve({jsnext: true }), terser() ]
+  plugins: [ resolve({jsnext: true }), /*terser()*/ ]
 };
