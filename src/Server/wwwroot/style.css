@@ -14,6 +14,30 @@ main {
     height: 100%;
 }
 
+#chatclient-login {
+    display: flex;
+    align-items: baseline;
+}
+
+#chatclient-login input[type="text"] {
+    margin: 0 0.5rem 0 0.5rem;
+    flex-grow: 1;
+}
+
+#chatclient-logout {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 1rem;
+}
+
+#chatclient-logout label {
+    flex-grow: 1;
+}
+
+#chatclient-logout label > b {
+    font-weight: bold;
+}
+
 chatclient-app {
     display: flex;
     flex-direction: column;

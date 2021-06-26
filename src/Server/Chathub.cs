@@ -10,9 +10,10 @@ namespace signalRtest
     }
     public class ChatHub : Hub
     {
-        public async Task SendMessage(Message m)
+        public async Task SendMessage(string payload)
         {
-            await Clients.All.SendAsync("ReceiveMessage", m);
+            var message = new Message { From = Context.User.Identity.Name, Payload = payload };
+            await Clients.All.SendAsync("ReceiveMessage", message);
         }
     }
 }

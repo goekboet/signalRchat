@@ -16,6 +16,16 @@ namespace signalRtest
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services
+                .AddAuthentication(options => {
+                    options.DefaultScheme = "Cookies";
+                })
+                .AddCookie("Cookies", options => 
+                {
+                    options.Cookie.Name = "chatclient-auth";
+                    options.AccessDeniedPath = new PathString("/accessdenied");
+                    options.Cookie.SameSite = SameSiteMode.Strict;
+                });
             services.AddRazorPages();
             services.AddSignalR();
         }
@@ -24,10 +34,16 @@ namespace signalRtest
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseStaticFiles();
+
             app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapPost("login", Auth.LoginHandler);
+                endpoints.MapPost("logout", Auth.LogoutHandler);
                 endpoints.MapRazorPages();
                 endpoints.MapHub<ChatHub>("/chatHub");
             });

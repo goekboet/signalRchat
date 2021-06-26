@@ -44,7 +44,7 @@ export class App extends HTMLElement {
 
     send() {
         this._connection
-            .send('SendMessage', { from: 'Testclient', payload: this._messageInput.value })
+            .send('SendMessage', this._messageInput.value )
             .then(() => this._messageInput.value = '')
     }
 

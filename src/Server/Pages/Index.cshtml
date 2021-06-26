@@ -2,8 +2,25 @@
 
 @{
     Layout = "_Layout";
+    var isLoggedin = User.Identity?.IsAuthenticated ?? false;
 }
 
 <main>
-    <chatclient-app></chatclient-app>
+    @if (isLoggedin) {
+        <form id="chatclient-logout" method="POST" action="logout">
+            <label>Welcome, <b>@User.Identity.Name</b></label>
+            <input type="submit" value="Logout">
+        </form>
+        <chatclient-app>
+
+        </chatclient-app>
+    }
+    else {
+        <form id="chatclient-login" method="POST" action="login">
+            <label for="username">Username:</label>
+            <input type="text" name="username">
+            <input type="submit">
+        </form>
+    }
+    
 </main>
