@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using StackExchange.Redis;
 
 namespace signalRtest
 {
@@ -28,6 +29,10 @@ namespace signalRtest
                 });
             services.AddRazorPages();
             services.AddSignalR();
+            services.AddSingleton<ConnectionMultiplexer>(sp => 
+                ConnectionMultiplexer.Connect("localhost")
+            );
+            services.AddScoped<ChatRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +49,8 @@ namespace signalRtest
             {
                 endpoints.MapPost("login", Auth.LoginHandler);
                 endpoints.MapPost("logout", Auth.LogoutHandler);
+                endpoints.MapGet("api/chat", ChatHttp.GetConnectedClients);
+                endpoints.MapGet("api/broadcast", ChatHttp.GetBroadCast);
                 endpoints.MapRazorPages();
                 endpoints.MapHub<ChatHub>("/chatHub");
             });
