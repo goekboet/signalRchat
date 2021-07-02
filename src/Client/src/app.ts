@@ -11,6 +11,7 @@ export class App extends HTMLElement {
         }).catch(err => {
             this.connect()
         })
+        
     }
 
     constructor() {

@@ -1,11 +1,13 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
 
 namespace signalRtest
 {
+    [Authorize]
     public class ChatHub : Hub
     {
         ChatRepository Repo {get;}
@@ -30,7 +32,7 @@ namespace signalRtest
             var json = JsonSerializer.Serialize(msg);
             await Clients.Others.SendAsync("ClientConnected", username);
             await Clients.All.SendAsync("ReceiveMessage", msg);
-
+            
             await base.OnConnectedAsync();
         }
 

@@ -44,6 +44,7 @@ export class Lobby extends HTMLElement {
 
             c.on('ReceiveMessage', (m : Message) => {
                 this._messages.unshift(m)
+                this._messages = this._messages.slice(0, 25)
                 this.renderMessages()
             })
             this._connection = c
