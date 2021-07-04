@@ -51,6 +51,8 @@ namespace signalRtest
                 endpoints.MapPost("logout", Auth.LogoutHandler);
                 endpoints.MapGet("api/participants", ChatHttp.GetConnectedClients);
                 endpoints.MapGet("api/broadcast", ChatHttp.GetBroadCast);
+                endpoints.MapGet("api/openChannels", ChatHttp.OpenChannels);
+                endpoints.MapGet("api/closedChannels", ChatHttp.ClosedChannels);
                 endpoints.MapRazorPages();
                 endpoints.MapHub<ChatHub>("/chatHub");
             });

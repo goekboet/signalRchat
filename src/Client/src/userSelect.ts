@@ -63,26 +63,72 @@ export class UserSelect extends HTMLElement {
         })
     }
 
+    _counterPart : string = undefined
+    set CounterPart(v : string) {
+        this._counterPart = v
+        this.renderOpenChannelBtn()
+    }
+    
+    get CounterPart() {
+        return this._counterPart
+    }
+    _openChannelBtn : HTMLButtonElement = undefined
+
+    renderOpenChannelBtn() {
+        this._openChannelBtn.disabled = this._counterPart == undefined
+    }
+
+    setCounterPart() {
+        var input = this._input.value
+        if (this.UserNames.some(x => x === input)) {
+            this.CounterPart = this._input.value
+        } else {
+            this.CounterPart = undefined
+        }
+        
+    }
+
+    openChannel() {
+        if (this.CounterPart == undefined) {
+            return;
+        }
+        
+        this._connection
+            .send('OpenChannel', this.CounterPart, 'Hello')
+            .then(x => console.log('Opened channel: ' + this.CounterPart))
+            .catch(e => console.error(e))
+    }
+
     constructor() {
         super()
         let dataList = document.createElement('datalist')
         dataList.id = this._listid
+        
         let input = document.createElement('input')
         input.setAttribute('list', this._listid)
-        input.name = 'finger'
+        input.type = 'text'
+        input.name = 'counterPart'
+        input.addEventListener('change', this.setCounterPart.bind(this))
+
+        let openChannelBtn = document.createElement('button');
+        openChannelBtn.innerText = "Say Hello"
+        openChannelBtn.disabled = true
+        openChannelBtn.addEventListener('click', this.openChannel.bind(this))
         
         this._dataList = dataList
         this._input = input
+        this._openChannelBtn = openChannelBtn;
     }
     
     connectedCallback() {
         this.initializeUserNames()
         let label = document.createElement('label')
-        label.innerText = 'Finger'
+        label.innerText = 'Online'
         this.append(
             label,
             this._input,
-            this._dataList
+            this._dataList,
+            this._openChannelBtn
         )
     }
 }

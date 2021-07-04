@@ -25,6 +25,26 @@ namespace signalRtest
             await ctx.Response.WriteAsJsonAsync(broadcast);
         }
 
+        public static async Task OpenChannels(
+            HttpContext ctx)
+        {
+            var repo = ctx.RequestServices.GetRequiredService<ChatRepository>();
+            var username = ctx.User.Identity.Name;
+            var openChannels = repo.OpenChannels(username);
+
+            await ctx.Response.WriteAsJsonAsync(openChannels);
+        }
+
+        public static async Task ClosedChannels(
+            HttpContext ctx)
+        {
+            var repo = ctx.RequestServices.GetRequiredService<ChatRepository>();
+            var username = ctx.User.Identity.Name;
+            var closed = repo.ClosedChannels(username);
+
+            await ctx.Response.WriteAsJsonAsync(closed);
+        }
+
     }
     
 }

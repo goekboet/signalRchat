@@ -16,6 +16,10 @@ namespace signalRtest
         const string UsersKey = "chat.users";
         const string BroadcastMessagesKey = "chat.broadcast";
 
+        static string ChannelKey(string channelId) => $"chat.channels.{channelId}";
+        static string OpenChannel(string username) => $"chat.username.{username}";
+        static string ClosedChannel(string username) => $"chat.username.{username}.archive";
+
         public ChatRepository(
             ConnectionMultiplexer redis
         )
@@ -38,5 +42,29 @@ namespace signalRtest
 
         public IEnumerable<string> GetBroadcast() => Db.ListRange(BroadcastMessagesKey, 0, 99).Select(x => x.ToString());
 
+        public void RecordChannel(string username, string channelId, BroadcastMessage m)
+        {
+            Db.SetAdd(OpenChannel(username), channelId);
+            var json = JsonSerializer.Serialize(m);
+            Db.ListLeftPush(ChannelKey(channelId), json);
+        }
+
+        public string[] OpenChannels(string username)
+        {
+            var r = Db.SetMembers(OpenChannel(username));
+            return r.Select(x => x.ToString()).ToArray();
+        }
+
+        public string[] ClosedChannels(string username)
+        {
+            var r = Db.SetMembers(ClosedChannel(username));
+            return r.Select(x => x.ToString()).ToArray();
+        }
+
+        public void CloseChannel(string username, string cId)
+        {
+            Db.SetRemove(OpenChannel(username), cId);
+            Db.SetAdd(ClosedChannel(username), cId);
+        }
     }
 }

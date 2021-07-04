@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -54,18 +55,62 @@ namespace signalRtest
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SendMessage(string payload)
+        static string channelId(string subj, string obj) => 
+            obj == "" 
+                ? "" 
+                : string.Join(".", 
+                    new [] { subj, obj}
+                    .OrderBy(x => x)
+                );
+
+        public async Task SendMessage(string payload, string counterPart = "")
         {
-            var username = Context.User?.Identity.Name ?? "no name";
+            var subject = Context.User?.Identity.Name ?? "no name";
+            var cId = channelId(subject, counterPart);
             var msg = new BroadcastMessage
             {
                 UnixMsTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Sender = username,
+                Channel = cId,
+                Sender = subject,
                 Payload = payload
             };
             var json = JsonSerializer.Serialize(msg);
-            Repo.Broadcast(json);
-            await Clients.All.SendAsync("ReceiveMessage", msg);
+            if (counterPart == "") 
+            {
+                Repo.Broadcast(json);
+                await Clients.All.SendAsync("ReceiveMessage", msg);
+            }
+            else
+            {
+                Repo.RecordChannel(subject, cId, msg);
+                await Clients.Group(cId).SendAsync("ChannelMessage", msg);
+            }
+        }
+
+        public async Task OpenChannel(string counterpart, string greet)
+        {
+            var subject = Context.User?.Identity.Name ?? "no name";
+            var cId = channelId(subject, counterpart);
+            
+            var payload = new BroadcastMessage 
+            { 
+                UnixMsTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                Channel = cId,
+                Sender = subject,
+                Payload = greet  
+            };
+
+            await Groups.AddToGroupAsync(subject, cId);
+            Repo.RecordChannel(subject, cId, payload);
+            await Clients.Group(cId).SendAsync("ChannelMessage", payload);
+        }
+
+        public async Task CloseChannel(string cId)
+        {
+            var subject = Context.User?.Identity.Name ?? "no name";
+            Repo.CloseChannel(subject, cId);
+            await Clients.Group(cId).SendAsync("ChannelClosed");
+            await Groups.RemoveFromGroupAsync(subject, cId);
         }
     }
 }

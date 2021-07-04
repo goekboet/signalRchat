@@ -3,3 +3,6 @@ https://localhost:5001/api/participants
 ###
 
 https://localhost:5001/api/broadcast
+
+###
+https://localhost:5001/api/openChannels

@@ -22,7 +22,6 @@ function toMessageEntry(m : Message) {
 export class Lobby extends HTMLElement {
     _container : HTMLDivElement
     _form : HTMLFormElement
-    _messageLabel : HTMLLabelElement
     _messageInput : HTMLInputElement
     _messageSubmit : HTMLInputElement
     _messageList : HTMLDivElement
@@ -80,10 +79,6 @@ export class Lobby extends HTMLElement {
         let form = document.createElement('form')
         form.id = 'chatclient-send'
 
-        let messageLabel = document.createElement('label')
-        messageLabel.setAttribute('for', 'chatclient-message')
-        messageLabel.innerText = 'Message'
-
         let messageInput = document.createElement('input')
         messageInput.name = 'chatclient-message'
         messageInput.type = 'text'
@@ -101,7 +96,6 @@ export class Lobby extends HTMLElement {
 
         this._container = container
         this._form = form
-        this._messageLabel = messageLabel
         this._messageSubmit = messageSubmit
         this._messageInput = messageInput
         this._messageList = messageList
@@ -110,7 +104,6 @@ export class Lobby extends HTMLElement {
 
     connectedCallback() {
         this._form.append(
-            this._messageLabel,
             this._messageInput,
             this._messageSubmit
         )

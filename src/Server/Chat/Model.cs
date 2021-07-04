@@ -6,8 +6,13 @@ namespace signalRtest
     {
         [JsonPropertyName("unixMsTimestamp")]
         public long UnixMsTimestamp { get; init; }
+        
+        [JsonPropertyName("channel")]
+        public string Channel {get;init;} = "";
+        
         [JsonPropertyName("sender")]
         public string Sender { get; init; }
+        
         [JsonPropertyName("payload")]
         public string Payload { get; init; }
     }
