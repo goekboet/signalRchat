@@ -49,7 +49,7 @@ namespace signalRtest
             {
                 endpoints.MapPost("login", Auth.LoginHandler);
                 endpoints.MapPost("logout", Auth.LogoutHandler);
-                endpoints.MapGet("api/chat", ChatHttp.GetConnectedClients);
+                endpoints.MapGet("api/participants", ChatHttp.GetConnectedClients);
                 endpoints.MapGet("api/broadcast", ChatHttp.GetBroadCast);
                 endpoints.MapRazorPages();
                 endpoints.MapHub<ChatHub>("/chatHub");

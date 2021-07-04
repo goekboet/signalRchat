@@ -4,3 +4,5 @@ export interface Message {
     readonly payload : string
 }
 
+export type UserName = string
+

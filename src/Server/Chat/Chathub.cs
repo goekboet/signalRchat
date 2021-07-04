@@ -28,7 +28,7 @@ namespace signalRtest
                 Sender = username,
                 Payload = "Entered the chat"
             };
-            Repo.RemoveUserName(username);
+            Repo.AddUsername(username);
             var json = JsonSerializer.Serialize(msg);
             await Clients.Others.SendAsync("ClientConnected", username);
             await Clients.All.SendAsync("ReceiveMessage", msg);
