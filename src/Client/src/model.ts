@@ -5,4 +5,5 @@ export interface Message {
 }
 
 export type UserName = string
+export type ChannelId = string
 

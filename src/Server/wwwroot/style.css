@@ -12,6 +12,7 @@ main {
     margin: auto;
     padding: 2rem;
     height: 100%;
+    overflow: hidden;
 }
 
 button {
@@ -46,39 +47,40 @@ input[type="submit"] {
     font-weight: bold;
 }
 
-chatclient-lobby {
+chatclient-app {
     display: flex;
     flex-direction: column;
+    overflow-y: hidden;
     height: 100%;
 }
 
-#chatclient-send {
+chatclient-messageinput {
     display: flex;
     flex-direction: row;
     align-items: baseline;
     margin-bottom: 1rem;
 }
 
-#chatclient-send input[type="text"] {
+chatclient-messageinput input[type="text"] {
     margin-right: 0.5rem;
     flex-grow: 1;
 }
 
-#chatclient-messages {
+chatclient-messagelist {
     flex-grow: 1;
     background-color: darkgray;
     width: 100%;
     overflow-y: auto;
 }
 
-#chatclient-messages div.message {
+chatclient-messagelist div.message {
     margin: 0.5rem;
     padding: 0.5rem;
     background-color: lightgray;
     border-radius: 5px;
 }
 
-#chatclient-messages div.message h1 {
+chatclient-messagelist div.message h1 {
     font-weight: bold;
     margin-bottom: 0.5rem;
 }
