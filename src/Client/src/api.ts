@@ -23,3 +23,17 @@ export async function GetParticipants() : Promise<UserName[]> {
         console.error(e)
     }
 }
+
+export async function GetOpenChannels() : Promise<string[]> {
+    try {
+        var r = await fetch('https://localhost:5001/api/openChannels')
+        if (!r.ok) {
+            throw new Error(r.statusText)
+        }
+
+        return await r.json()
+    }
+    catch (e) {
+        console.error(e)
+    }
+}

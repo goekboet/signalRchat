@@ -99,3 +99,33 @@ chatclient-userselect input[Type="text"] {
 chatclient-userselect button {
     margin-left: 0.5rem;
 }
+
+#chatclient-app-channelcontainer {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: baseline;
+}
+chatclient-channelselect {
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: baseline;
+}
+
+chatclient-channelselect button {
+    border: none;
+    background: darkgray;
+}
+
+chatclient-channelselect button:hover {
+    background: gray;
+}
+
+chatclient-channelselect button[Name="select"] {
+    border-radius: 4px 0 0 4px;
+    flex-grow: 1;
+}
+
+chatclient-channelselect button[Name="close"] {
+    border-radius: 0 4px 4px 0;
+    width:unset;
+}

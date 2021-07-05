@@ -102,6 +102,7 @@ namespace signalRtest
 
             await Groups.AddToGroupAsync(subject, cId);
             Repo.RecordChannel(subject, cId, payload);
+            await Clients.Group(cId).SendAsync("ChannelOpened", cId);
             await Clients.Group(cId).SendAsync("ChannelMessage", payload);
         }
 
