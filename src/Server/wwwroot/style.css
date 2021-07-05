@@ -104,28 +104,40 @@ chatclient-userselect button {
     margin-bottom: 0.5rem;
     display: flex;
     align-items: baseline;
+    background-color: darkgrey;
+    padding: 4px;
 }
 chatclient-channelselect {
     margin-right: 0.5rem;
     display: flex;
     align-items: baseline;
+    border: 1px;
+    border-color: lightgrey;
+    border-style: solid;
+    border-radius: 4px;
 }
 
 chatclient-channelselect button {
     border: none;
-    background: darkgray;
+    background: none;
+    padding:2px;
 }
 
-chatclient-channelselect button:hover {
-    background: gray;
+chatclient-channelselect:hover {
+    background-color: lightgray;
 }
 
 chatclient-channelselect button[Name="select"] {
-    border-radius: 4px 0 0 4px;
     flex-grow: 1;
 }
 
+chatclient-channelselect.selected {
+    background-color: lightgray;
+}
+
 chatclient-channelselect button[Name="close"] {
-    border-radius: 0 4px 4px 0;
-    width:unset;
+    width: 3ex;
+    border-left-style: solid;
+    border-left-width: thin;
+    border-left-color: lightgrey;
 }

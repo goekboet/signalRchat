@@ -16,4 +16,5 @@ namespace signalRtest
         [JsonPropertyName("payload")]
         public string Payload { get; init; }
     }
+
 }

@@ -29,7 +29,7 @@ namespace signalRtest
                 Sender = username,
                 Payload = "Entered the chat"
             };
-            Repo.AddUsername(username);
+            Repo.AddUsername(username, Context.ConnectionId);
             var json = JsonSerializer.Serialize(msg);
             await Clients.Others.SendAsync("ClientConnected", username);
             await Clients.All.SendAsync("ReceiveMessage", msg);
@@ -100,7 +100,9 @@ namespace signalRtest
                 Payload = greet  
             };
 
-            await Groups.AddToGroupAsync(subject, cId);
+            var counterPartConnectionId = Repo.GetConnectionId(counterpart);
+            await Groups.AddToGroupAsync(Context.ConnectionId, cId);
+            await Groups.AddToGroupAsync(counterPartConnectionId, cId);
             Repo.RecordChannel(subject, cId, payload);
             await Clients.Group(cId).SendAsync("ChannelOpened", cId);
             await Clients.Group(cId).SendAsync("ChannelMessage", payload);
@@ -110,8 +112,11 @@ namespace signalRtest
         {
             var subject = Context.User?.Identity.Name ?? "no name";
             Repo.CloseChannel(subject, cId);
-            await Clients.Group(cId).SendAsync("ChannelClosed");
-            await Groups.RemoveFromGroupAsync(subject, cId);
+            await Clients.Group(cId).SendAsync("ChannelClosed", cId);
+            var counterpart = cId.Split(".").Single(x => x != subject);
+            var counterPartConnectionId = Repo.GetConnectionId(counterpart);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, cId);
+            await Groups.RemoveFromGroupAsync(counterPartConnectionId, cId);
         }
     }
 }

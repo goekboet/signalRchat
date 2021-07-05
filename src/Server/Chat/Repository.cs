@@ -16,6 +16,7 @@ namespace signalRtest
         const string UsersKey = "chat.users";
         const string BroadcastMessagesKey = "chat.broadcast";
 
+        static string ConnectionId(string username) => $"chat.username.{username}.connectionId";
         static string ChannelKey(string channelId) => $"chat.channels.{channelId}";
         static string OpenChannel(string username) => $"chat.username.{username}";
         static string ClosedChannel(string username) => $"chat.username.{username}.archive";
@@ -27,9 +28,20 @@ namespace signalRtest
             Redis = redis;
         }
 
-        public void AddUsername(string username) => Db.SetAdd(UsersKey, username);
+        public void AddUsername(
+            string username,
+            string connectionId) {
+            Db.SetAdd(UsersKey, username);
+            Db.StringSet(ConnectionId(username), connectionId);
+        }
         
-        public void RemoveUserName(string username) => Db.SetRemove(UsersKey, username);
+        public void RemoveUserName(string username) 
+        {
+            Db.SetRemove(UsersKey, username);
+            Db.KeyDelete(ConnectionId(username));
+        }
+
+        public string GetConnectionId(string username) => Db.StringGet(ConnectionId(username));
         public IEnumerable<string> GetUsers() => Db.SetMembers(UsersKey).Select(x => x.ToString());
 
         public bool UserNameTaken(string username) => Db.SetContains(UsersKey, username);
@@ -41,6 +53,8 @@ namespace signalRtest
         }
 
         public IEnumerable<string> GetBroadcast() => Db.ListRange(BroadcastMessagesKey, 0, 99).Select(x => x.ToString());
+
+        
 
         public void RecordChannel(string username, string channelId, BroadcastMessage m)
         {

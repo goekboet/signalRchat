@@ -32,12 +32,22 @@ export class App extends HTMLElement {
         })
     }
 
+    switchChannel(target : CustomEvent<ChannelId>) {
+        for (const s of this.OpenChannels) {
+            s.Selected = s.Channel === target.detail
+        }
+    }
+
     initialiazeChannels() {
         GetOpenChannels()
             .then((r : string[]) => {
-                let selects = [ new ChannelSelect() ]
+                let lobby = new ChannelSelect()
+                lobby.addEventListener('selectChannel', this.switchChannel.bind(this))
+                lobby.Selected = true
+                let selects = [ lobby ]
                 r.forEach(x => {
                     let channel = new ChannelSelect()
+                    channel.addEventListener('selectChannel', this.switchChannel.bind(this))
                     channel.Channel = x
                     channel.Connection = this._connection
                     selects.push(channel)
@@ -83,6 +93,9 @@ export class App extends HTMLElement {
         let userSelect = new UserSelect()
         let channelContainer = document.createElement('div') 
         channelContainer.id = 'chatclient-app-channelcontainer'
+        connection.on('ChannelOpened', this.channelOpened.bind(this))
+        connection.on('ChannelClosed', this.channelClosed.bind(this))
+
         let messageInput = new MessageInput()
         let lobby = new MessageList()
 
