@@ -1,13 +1,12 @@
-import { HubConnection } from '@microsoft/signalr'
 import { Message } from './model.js'
-import { GetBroadCast } from './api'
 
 function toMessageEntry(m : Message) {
     let container = document.createElement('div')
     container.classList.add('message')
 
     let sender = document.createElement('h1')
-    sender.innerText = `${m.unixMsTimestamp}: ${m.sender}`
+    let ts = new Date(m.unixMsTimestamp).toLocaleTimeString()
+    sender.innerText = `${ts} - ${m.sender}`
 
     let body = document.createElement('p')
     body.innerText = m.payload
