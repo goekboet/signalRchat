@@ -23,8 +23,8 @@ namespace signalRtest
         {
             var repo = ctx.RequestServices.GetRequiredService<ChatRepository>();
             var msgs = repo.GetBroadcast();
-  
-            var array = msgs.Select(x => JsonSerializer.Deserialize<BroadcastMessage>(x));
+
+            var array = msgs.Select(x => JsonSerializer.Deserialize<ChattMessage>(x));
             await ctx.Response.WriteAsJsonAsync(array);
         }
 
@@ -35,7 +35,7 @@ namespace signalRtest
             var channelId = ctx.Request.RouteValues["channelId"].ToString();
             var msgs = repo.GetChannel(channelId);
 
-            var array = msgs.Select(x => JsonSerializer.Deserialize<BroadcastMessage>(x));
+            var array = msgs.Select(x => JsonSerializer.Deserialize<ChattMessage>(x));
             await ctx.Response.WriteAsJsonAsync(array);
         }
 
@@ -60,5 +60,5 @@ namespace signalRtest
         }
 
     }
-    
+
 }

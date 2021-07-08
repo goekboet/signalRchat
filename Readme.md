@@ -18,8 +18,14 @@ This project implements a simple browser-based chatclient with SignalR.
 4. `dotnet run`
 
 
-## Description
+## Features
 
-- Sign in with some username
-- Start chatting
+- Cooke authentication (0-security)
+- Keep list of all connected users updated via websocket
+- Broadcast chatmessage to anybody listening
+- send chat messages via named subset of users (i.e. channel/room). 
+- Persists channels.
+- Persists chatmessages.
+- js-client
+
 

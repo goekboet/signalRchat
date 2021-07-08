@@ -11,16 +11,6 @@ namespace signalRtest
         ConnectionMultiplexer Redis { get; }
         IDatabase Db => Redis.GetDatabase();
 
-        static Random Rng = new Random(); 
-
-        const string UsersKey = "chat.users";
-        const string BroadcastMessagesKey = "chat.broadcast";
-
-        static string ConnectionId(string username) => $"chat.username.{username}.connectionId";
-        static string ChannelKey(string channelId) => $"chat.channels.{channelId}";
-        static string OpenChannel(string username) => $"chat.username.{username}";
-        static string ClosedChannel(string username) => $"chat.username.{username}.archive";
-
         public ChatRepository(
             ConnectionMultiplexer redis
         )
@@ -30,61 +20,62 @@ namespace signalRtest
 
         public void AddUsername(
             string username,
-            string connectionId) {
-            Db.SetAdd(UsersKey, username);
-            Db.StringSet(ConnectionId(username), connectionId);
-        }
-        
-        public void RemoveUserName(string username) 
+            string connectionId)
         {
-            Db.SetRemove(UsersKey, username);
-            Db.KeyDelete(ConnectionId(username));
+            Db.SetAdd(KeyNames.UsersKey, username);
+            Db.StringSet(KeyNames.ConnectionId(username), connectionId);
         }
 
-        public string GetConnectionId(string username) => Db.StringGet(ConnectionId(username));
-        public IEnumerable<string> GetUsers() => Db.SetMembers(UsersKey).Select(x => x.ToString());
+        public void RemoveUserName(string username)
+        {
+            Db.SetRemove(KeyNames.UsersKey, username);
+            Db.KeyDelete(KeyNames.ConnectionId(username));
+        }
 
-        public bool UserNameTaken(string username) => Db.SetContains(UsersKey, username);
+        public string GetConnectionId(string username) => Db.StringGet(KeyNames.ConnectionId(username));
+        public IEnumerable<string> GetUsers() => Db.SetMembers(KeyNames.UsersKey).Select(x => x.ToString());
 
-        public void Broadcast(BroadcastMessage m)
+        public bool UserNameTaken(string username) => Db.SetContains(KeyNames.UsersKey, username);
+
+        public void Broadcast(ChattMessage m)
         {
             var json = JsonSerializer.Serialize(m);
-            Db.ListLeftPush(BroadcastMessagesKey, json);
-            Db.ListTrim(BroadcastMessagesKey, 0, 32);
+            Db.ListLeftPush(KeyNames.BroadcastMessagesKey, json);
+            Db.ListTrim(KeyNames.BroadcastMessagesKey, 0, 32);
         }
 
-        public IEnumerable<string> GetBroadcast() => Db.ListRange(BroadcastMessagesKey, 0, 99).Select(x => x.ToString());
+        public IEnumerable<string> GetBroadcast() => Db.ListRange(KeyNames.BroadcastMessagesKey, 0, 99).Select(x => x.ToString());
 
-        public IEnumerable<string> GetChannel(string cId) => Db.ListRange(ChannelKey(cId)).Select(x => x.ToString());
+        public IEnumerable<string> GetChannel(string cId) => Db.ListRange(KeyNames.ChannelKey(cId)).Select(x => x.ToString());
 
-        public void RecordChannel(string channelId, BroadcastMessage m)
+        public void RecordChannel(string channelId, ChattMessage m)
         {
             var members = channelId.Split(".");
-            Db.SetAdd(OpenChannel(members[0]), channelId);
-            Db.SetAdd(OpenChannel(members[1]), channelId);
+            Db.SetAdd(KeyNames.OpenChannel(members[0]), channelId);
+            Db.SetAdd(KeyNames.OpenChannel(members[1]), channelId);
             var json = JsonSerializer.Serialize(m);
-            Db.ListLeftPush(ChannelKey(channelId), json);
+            Db.ListLeftPush(KeyNames.ChannelKey(channelId), json);
         }
 
         public string[] OpenChannels(string username)
         {
-            var r = Db.SetMembers(OpenChannel(username));
+            var r = Db.SetMembers(KeyNames.OpenChannel(username));
             return r.Select(x => x.ToString()).ToArray();
         }
 
         public string[] ClosedChannels(string username)
         {
-            var r = Db.SetMembers(ClosedChannel(username));
+            var r = Db.SetMembers(KeyNames.ClosedChannel(username));
             return r.Select(x => x.ToString()).ToArray();
         }
 
         public void CloseChannel(string cId)
         {
             var members = cId.Split(".");
-            Db.SetRemove(OpenChannel(members[0]), cId);
-            Db.SetRemove(OpenChannel(members[1]), cId);
-            Db.SetAdd(ClosedChannel(members[0]), cId);
-            Db.SetAdd(ClosedChannel(members[1]), cId);
+            Db.SetRemove(KeyNames.OpenChannel(members[0]), cId);
+            Db.SetRemove(KeyNames.OpenChannel(members[1]), cId);
+            Db.SetAdd(KeyNames.ClosedChannel(members[0]), cId);
+            Db.SetAdd(KeyNames.ClosedChannel(members[1]), cId);
         }
     }
 }
