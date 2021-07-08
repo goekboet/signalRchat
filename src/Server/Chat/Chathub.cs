@@ -1,10 +1,8 @@
 using System;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using StackExchange.Redis;
 
 namespace signalRtest
 {
@@ -22,35 +20,72 @@ namespace signalRtest
 
         public override async Task OnConnectedAsync()
         {
-            var username = Context.User?.Identity.Name ?? "no name";
+            var username = Context.User?.Identity.Name;
+            if (username == null) return;
+
+            var ts = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             var msg = new BroadcastMessage
             {
                 UnixMsTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 Sender = username,
-                Payload = "Entered the chat"
+                Payload = "Came online."
             };
             Repo.AddUsername(username, Context.ConnectionId);
-            var json = JsonSerializer.Serialize(msg);
+            
             await Clients.Others.SendAsync("ClientConnected", username);
             await Clients.All.SendAsync("NewChatmessage", msg);
+
+            var groups = Repo.OpenChannels(username);
+            foreach (var g in groups)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, g);
+                var groupAnnounce = new BroadcastMessage
+                {
+                    UnixMsTimestamp = ts,
+                    Channel = g,
+                    Sender = username,
+                    Payload = "Came online."
+                };
+                
+                Repo.RecordChannel(g, groupAnnounce);
+                await Clients.Group(g).SendAsync("NewChatmessage", groupAnnounce);
+            }
             
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(System.Exception exception)
         {
-            var username = Context.User?.Identity.Name ?? "no name";
-            var msg = new BroadcastMessage
+            var username = Context.User?.Identity.Name;
+            if (username == null) return;
+
+            var ts = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+            var broadCastAnnounce = new BroadcastMessage
             {
-                UnixMsTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                UnixMsTimestamp = ts,
                 Sender = username,
-                Payload = "Left the chat"
+                Payload = "Went offline."
             };
             Repo.RemoveUserName(username);
-            var json = JsonSerializer.Serialize(msg);
-            Repo.Broadcast(json);
+            Repo.Broadcast(broadCastAnnounce);
             await Clients.Others.SendAsync("ClientDisconnected", username);
-            await Clients.All.SendAsync("NewChatmessage", msg);
+            await Clients.All.SendAsync("NewChatmessage", broadCastAnnounce);
+
+            var groups = Repo.OpenChannels(username);
+            foreach (var g in groups)
+            {
+                var groupAnnounce = new BroadcastMessage
+                {
+                    UnixMsTimestamp = ts,
+                    Channel = g,
+                    Sender = username,
+                    Payload = "Went offline."
+                };
+                
+                Repo.RecordChannel(g, groupAnnounce);
+                await Clients.Group(g).SendAsync("NewChatmessage", groupAnnounce);
+            }
 
             await base.OnDisconnectedAsync(exception);
         }
@@ -63,10 +98,9 @@ namespace signalRtest
                     .OrderBy(x => x)
                 );
 
-        public async Task SendMessage(string payload, string counterPart = "")
+        public async Task SendMessage(string payload, string cId = "")
         {
             var subject = Context.User?.Identity.Name ?? "no name";
-            var cId = channelId(subject, counterPart);
             var msg = new BroadcastMessage
             {
                 UnixMsTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
@@ -74,15 +108,15 @@ namespace signalRtest
                 Sender = subject,
                 Payload = payload
             };
-            var json = JsonSerializer.Serialize(msg);
-            if (counterPart == "") 
+
+            if (cId == "") 
             {
-                Repo.Broadcast(json);
+                Repo.Broadcast(msg);
                 await Clients.All.SendAsync("NewChatmessage", msg);
             }
             else
             {
-                Repo.RecordChannel(subject, cId, msg);
+                Repo.RecordChannel(cId, msg);
                 await Clients.Group(cId).SendAsync("NewChatmessage", msg);
             }
         }
@@ -103,15 +137,16 @@ namespace signalRtest
             var counterPartConnectionId = Repo.GetConnectionId(counterpart);
             await Groups.AddToGroupAsync(Context.ConnectionId, cId);
             await Groups.AddToGroupAsync(counterPartConnectionId, cId);
-            Repo.RecordChannel(subject, cId, payload);
+            
+            Repo.RecordChannel(cId, payload);
             await Clients.Group(cId).SendAsync("ChannelOpened", cId);
-            await Clients.Group(cId).SendAsync("ChannelMessage", payload);
+            await Clients.Group(cId).SendAsync("NewChatmessage", payload);
         }
 
         public async Task CloseChannel(string cId)
         {
             var subject = Context.User?.Identity.Name ?? "no name";
-            Repo.CloseChannel(subject, cId);
+            Repo.CloseChannel(cId);
             await Clients.Group(cId).SendAsync("ChannelClosed", cId);
             var counterpart = cId.Split(".").Single(x => x != subject);
             var counterPartConnectionId = Repo.GetConnectionId(counterpart);

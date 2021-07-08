@@ -58,6 +58,7 @@ export class App extends HTMLElement {
 
     switchChannel(target : CustomEvent<ChannelId>) {
         this.SelectedChannel = target.detail
+        this._messageInput.Channel = target.detail
         for (const c of this.OpenChannels) {
             if (c.Channel === this.SelectedChannel) {
                 c.Selected = true
@@ -96,20 +97,6 @@ export class App extends HTMLElement {
         }
     }
 
-    channelOpened(cId : ChannelId) {
-        let select = new ChannelSelect()
-        select.Channel = cId
-        select.Connection = this._connection
-
-        let cs = this.OpenChannels
-        cs.push(select)
-        this.OpenChannels = cs    
-    }
-
-    channelClosed(cId : ChannelId) {
-        this.OpenChannels = this.OpenChannels.filter(x => x.Channel !== cId)
-    }
-
     createChannelSelect(channel : ChannelId) {
         var select = new ChannelSelect()
         select.Channel = channel
@@ -118,6 +105,18 @@ export class App extends HTMLElement {
         select.Connection = this._connection
 
         return select
+    }
+
+    channelOpened(cId : ChannelId) {
+        let select = this.createChannelSelect(cId)
+
+        let cs = this.OpenChannels
+        cs.push(select)
+        this.OpenChannels = cs    
+    }
+
+    channelClosed(cId : ChannelId) {
+        this.OpenChannels = this.OpenChannels.filter(x => x.Channel !== cId)
     }
 
     initializeChannels() {

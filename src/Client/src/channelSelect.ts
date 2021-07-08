@@ -64,8 +64,7 @@ export class ChannelSelect extends HTMLElement {
     }
 
     closeChannel() {
-        console.log('Closing ' + this.Channel)
-        this.Connection.send('CloseChannel', this.Channel).then(() => { console.log('Closed')})
+        this.Connection.send('CloseChannel', this.Channel)
     }
 
     constructor() {

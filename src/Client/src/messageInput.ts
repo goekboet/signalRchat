@@ -6,6 +6,9 @@ export class MessageInput extends HTMLElement {
     get Channel() {
         return this._channel
     }
+    set Channel(c : ChannelId) {
+        this._channel = c
+    }
     _messageInput : HTMLInputElement
     _messageSubmit : HTMLButtonElement
 

@@ -46,9 +46,10 @@ namespace signalRtest
 
         public bool UserNameTaken(string username) => Db.SetContains(UsersKey, username);
 
-        public void Broadcast(string msgJson )
+        public void Broadcast(BroadcastMessage m)
         {
-            Db.ListLeftPush(BroadcastMessagesKey, msgJson);
+            var json = JsonSerializer.Serialize(m);
+            Db.ListLeftPush(BroadcastMessagesKey, json);
             Db.ListTrim(BroadcastMessagesKey, 0, 32);
         }
 
@@ -56,11 +57,11 @@ namespace signalRtest
 
         public IEnumerable<string> GetChannel(string cId) => Db.ListRange(ChannelKey(cId)).Select(x => x.ToString());
 
-        
-
-        public void RecordChannel(string username, string channelId, BroadcastMessage m)
+        public void RecordChannel(string channelId, BroadcastMessage m)
         {
-            Db.SetAdd(OpenChannel(username), channelId);
+            var members = channelId.Split(".");
+            Db.SetAdd(OpenChannel(members[0]), channelId);
+            Db.SetAdd(OpenChannel(members[1]), channelId);
             var json = JsonSerializer.Serialize(m);
             Db.ListLeftPush(ChannelKey(channelId), json);
         }
@@ -77,10 +78,13 @@ namespace signalRtest
             return r.Select(x => x.ToString()).ToArray();
         }
 
-        public void CloseChannel(string username, string cId)
+        public void CloseChannel(string cId)
         {
-            Db.SetRemove(OpenChannel(username), cId);
-            Db.SetAdd(ClosedChannel(username), cId);
+            var members = cId.Split(".");
+            Db.SetRemove(OpenChannel(members[0]), cId);
+            Db.SetRemove(OpenChannel(members[1]), cId);
+            Db.SetAdd(ClosedChannel(members[0]), cId);
+            Db.SetAdd(ClosedChannel(members[1]), cId);
         }
     }
 }
