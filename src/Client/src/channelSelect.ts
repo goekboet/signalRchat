@@ -21,6 +21,23 @@ export class ChannelSelect extends HTMLElement {
         return this._channelId
     }
 
+    _lastTouched : number = 0
+    get LastTouched() {
+        return this._lastTouched
+    }
+    set LastTouched(v : number) {
+        this._lastTouched = v
+    }
+
+    _unread : number = 0
+    get Unread() {
+        return this._unread
+    }
+    set Unead(v : number) {
+        this._unread = v
+    }
+
+
     emitSelectEvent() {
         let evt = new CustomEvent<ChannelId>('selectChannel', { detail: this.Channel }) 
         this.dispatchEvent(evt)

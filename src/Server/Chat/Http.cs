@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Primitives;
 
 namespace signalRtest
 {
@@ -21,8 +22,21 @@ namespace signalRtest
             HttpContext ctx)
         {
             var repo = ctx.RequestServices.GetRequiredService<ChatRepository>();
-            var broadcast = repo.GetBroadcast().Select(x => JsonSerializer.Deserialize<BroadcastMessage>(x));
-            await ctx.Response.WriteAsJsonAsync(broadcast);
+            var msgs = repo.GetBroadcast();
+  
+            var array = msgs.Select(x => JsonSerializer.Deserialize<BroadcastMessage>(x));
+            await ctx.Response.WriteAsJsonAsync(array);
+        }
+
+        public static async Task GetChannel(
+            HttpContext ctx)
+        {
+            var repo = ctx.RequestServices.GetRequiredService<ChatRepository>();
+            var channelId = ctx.Request.RouteValues["channelId"].ToString();
+            var msgs = repo.GetChannel(channelId);
+
+            var array = msgs.Select(x => JsonSerializer.Deserialize<BroadcastMessage>(x));
+            await ctx.Response.WriteAsJsonAsync(array);
         }
 
         public static async Task OpenChannels(

@@ -3,8 +3,8 @@ import { UserSelect } from './userSelect.js'
 import { MessageInput } from './messageInput.js'
 import { MessageList } from './messageList.js'
 import { ChannelSelect } from './channelSelect.js'
-import { ChannelId } from './model.js'
-import { GetOpenChannels } from './api.js'
+import { ChannelId, Message } from './model.js'
+import { GetBroadCast, GetChannel, GetOpenChannels } from './api.js'
 
 export class App extends HTMLElement {
     _connection : HubConnection = undefined
@@ -17,15 +17,39 @@ export class App extends HTMLElement {
         this._openChannels = v
         this.renderChannels()
     }
+
+    getSelectedChannel() : ChannelId {
+        return this.OpenChannels.find(x => x.Selected)?.Channel
+    }
+
     _messageInput : MessageInput = undefined
-    _lobby : MessageList = undefined
+    _selectedChannel : ChannelId = ''
+    get SelectedChannel() {
+        return this._selectedChannel
+    }
+    set SelectedChannel(v : ChannelId) {
+        this._selectedChannel = v
+    }
+
+    _displayedMessages : MessageList = undefined
+
+    _messageCache : Message[] = []
+    get MessageCache() {
+        return this._messageCache.slice()
+    }
+    set MessageCache(v : Message[]) {
+        this._messageCache = v
+        if (this._displayedMessages) {
+            this._displayedMessages.Messages = v
+        }
+    }
 
     connect() {
         this._connection.start().then(() => {
             this._userSelect.Connection = this._connection
             this._messageInput.Connection = this._connection
-            this._lobby.Connection = this._connection
-            this.initialiazeChannels()
+            
+            
         }).catch(err => {
             console.error(err)
             this.connect()
@@ -33,31 +57,43 @@ export class App extends HTMLElement {
     }
 
     switchChannel(target : CustomEvent<ChannelId>) {
-        for (const s of this.OpenChannels) {
-            s.Selected = s.Channel === target.detail
+        this.SelectedChannel = target.detail
+        for (const c of this.OpenChannels) {
+            if (c.Channel === this.SelectedChannel) {
+                c.Selected = true
+                c.Unead = 0
+            } else {
+                c.Selected = false
+            }
         }
+        this.initializeMessages()
     }
 
-    initialiazeChannels() {
-        GetOpenChannels()
-            .then((r : string[]) => {
-                let lobby = new ChannelSelect()
-                lobby.addEventListener('selectChannel', this.switchChannel.bind(this))
-                lobby.Selected = true
-                let selects = [ lobby ]
-                r.forEach(x => {
-                    let channel = new ChannelSelect()
-                    channel.addEventListener('selectChannel', this.switchChannel.bind(this))
-                    channel.Channel = x
-                    channel.Connection = this._connection
-                    selects.push(channel)
-                })
+    handleMessage(m : Message) {
+        if (m.channel === this.SelectedChannel) {
+            let msgs = this.MessageCache
+            msgs.unshift(m)
+            this.MessageCache = msgs
+        } else {
+            for (const c of this.OpenChannels) {
+                if (c.Channel === m.channel) {
+                    c.LastTouched = m.unixMsTimestamp
+                    c.Unead += 1
+                }
+            }
+        }
+    } 
 
-                this.OpenChannels = selects
+    initializeMessages() {
+        if (this.SelectedChannel === '') {
+            GetBroadCast().then(history => {
+                this.MessageCache = history
             })
-            .catch(err => {
-                console.error(err)
+        } else {
+            GetChannel(this.SelectedChannel).then(channel => {
+                this.MessageCache = channel
             })
+        }
     }
 
     channelOpened(cId : ChannelId) {
@@ -72,6 +108,31 @@ export class App extends HTMLElement {
 
     channelClosed(cId : ChannelId) {
         this.OpenChannels = this.OpenChannels.filter(x => x.Channel !== cId)
+    }
+
+    createChannelSelect(channel : ChannelId) {
+        var select = new ChannelSelect()
+        select.Channel = channel
+        select.Selected = channel === this.SelectedChannel
+        select.addEventListener('selectChannel', this.switchChannel.bind(this))
+        select.Connection = this._connection
+
+        return select
+    }
+
+    initializeChannels() {
+        var lobby = this.createChannelSelect('')
+
+        this.OpenChannels = [ lobby ]
+        GetOpenChannels().then(cs => {
+            for (const c of cs) {
+                let select = this.createChannelSelect(c)
+                
+                let openChannels = this.OpenChannels
+                openChannels.push(select)
+                this.OpenChannels = openChannels
+            }
+        })
     }
 
     _channelContainer : HTMLDivElement = undefined
@@ -103,7 +164,8 @@ export class App extends HTMLElement {
         this._userSelect = userSelect
         this._channelContainer = channelContainer
         this._messageInput = messageInput
-        this._lobby = lobby
+        this._displayedMessages = lobby
+        this._connection.on('NewChatmessage', this.handleMessage.bind(this))
     }
     
     connectedCallback() {
@@ -111,10 +173,12 @@ export class App extends HTMLElement {
             this._userSelect,
             this._channelContainer,
             this._messageInput,
-            this._lobby
+            this._displayedMessages
         )
 
         this.connect()
+        this.initializeChannels()
+        this.initializeMessages()
     }
 }
 

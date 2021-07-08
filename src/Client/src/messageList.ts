@@ -19,26 +19,11 @@ function toMessageEntry(m : Message) {
 }
 
 export class MessageList extends HTMLElement {
-    _connection : HubConnection = undefined
     
     _messages : Message[] = []
-
-    set Connection(c : HubConnection) {
-        if (!this._connection) {
-            c.on('ReceiveMessage', (m : Message) => {
-                this._messages.unshift(m)
-                this._messages = this._messages.slice(0, 25)
-                this.renderMessages()
-            })
-            this._connection = c
-        }
-    }
-
-    addHistory() {
-        GetBroadCast().then(x => {
-            this._messages = this._messages.concat(x)
-            this.renderMessages()
-        })
+    set Messages(v : Message[]) {
+        this._messages = v
+        this.renderMessages()
     }
 
     renderMessages() {
@@ -54,7 +39,7 @@ export class MessageList extends HTMLElement {
     }
 
     connectedCallback() {
-        this.addHistory()
+        this.renderMessages()
     }
 }
 

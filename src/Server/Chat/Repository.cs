@@ -54,6 +54,8 @@ namespace signalRtest
 
         public IEnumerable<string> GetBroadcast() => Db.ListRange(BroadcastMessagesKey, 0, 99).Select(x => x.ToString());
 
+        public IEnumerable<string> GetChannel(string cId) => Db.ListRange(ChannelKey(cId)).Select(x => x.ToString());
+
         
 
         public void RecordChannel(string username, string channelId, BroadcastMessage m)

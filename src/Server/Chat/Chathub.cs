@@ -32,7 +32,7 @@ namespace signalRtest
             Repo.AddUsername(username, Context.ConnectionId);
             var json = JsonSerializer.Serialize(msg);
             await Clients.Others.SendAsync("ClientConnected", username);
-            await Clients.All.SendAsync("ReceiveMessage", msg);
+            await Clients.All.SendAsync("NewChatmessage", msg);
             
             await base.OnConnectedAsync();
         }
@@ -50,7 +50,7 @@ namespace signalRtest
             var json = JsonSerializer.Serialize(msg);
             Repo.Broadcast(json);
             await Clients.Others.SendAsync("ClientDisconnected", username);
-            await Clients.All.SendAsync("ReceiveMessage", msg);
+            await Clients.All.SendAsync("NewChatmessage", msg);
 
             await base.OnDisconnectedAsync(exception);
         }
@@ -78,12 +78,12 @@ namespace signalRtest
             if (counterPart == "") 
             {
                 Repo.Broadcast(json);
-                await Clients.All.SendAsync("ReceiveMessage", msg);
+                await Clients.All.SendAsync("NewChatmessage", msg);
             }
             else
             {
                 Repo.RecordChannel(subject, cId, msg);
-                await Clients.Group(cId).SendAsync("ChannelMessage", msg);
+                await Clients.Group(cId).SendAsync("NewChatmessage", msg);
             }
         }
 

@@ -1,6 +1,7 @@
 export interface Message {
     readonly unixMsTimestamp : number
-    readonly sender : string
+    readonly channel : string
+    readonly sender : UserName
     readonly payload : string
 }
 
